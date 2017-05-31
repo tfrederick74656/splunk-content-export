@@ -1,31 +1,32 @@
 /*************************
 Splunk Rule Downloader
 Written by Tyler Frederick (tyler.frederick@securityriskadvisors.com)
-Version 1.5, 05/31/2017
+Version 1.6, 05/31/2017
 
 Changelog:
-1.5 - Add support for Swimlane Searches (Entity Investigator Search)
+1.6 - Add support for Views and XML file export
+1.5 - Add support for Entity Investigator Search (Swimlane Searches)
 1.4 - Add support for Key Indicators
 1.3 - Initial Release w/ Support for Correlation Searches
 *************************/
 
 // TSV Data
-var tsv;
+var data;
 var filename;
+const TSV_EXT = ".tsv"
+const URL = String(window.location.href);
 
 // TSV Creator
-function append(key, value){tsv = tsv + key + "\t" + String(value) + "\r\n";}
+function append(key, value){data = data + key + "\t" + String(value) + "\r\n";}
 
 // For keys with multiple values
-function startKey(key){tsv = tsv + key;}
-function valueOnly(value){tsv = tsv + "\t" + String(value)}
-function endKey(){tsv = tsv + "\r\n"}
+function startKey(key){data = data + key;}
+function valueOnly(value){data = data + "\t" + String(value)}
+function endKey(){data = data + "\r\n"}
 
 function acquireCorrelationSearch(){
-	filename = document.getElementsByName("name")[0].value + ".tsv"
-
-	// URL
-	append("URL", window.location.href);
+	filename = document.getElementsByName("name")[0].value + TSV_EXT
+	append("URL", URL);
 
 	// Correlation Search
 	append("Search Name", document.getElementsByName("name")[0].value); // Search Name*
@@ -87,10 +88,8 @@ function acquireCorrelationSearch(){
 }
 
 function acquireKeyIndicatorSearch(){
-	filename = document.getElementsByName("search-name")[0].value + ".tsv"
-	
-	// URL
-	append("URL", window.location.href);
+	filename = document.getElementsByName("search-name")[0].value + TSV_EXT
+	append("URL", URL);
 	
 	// Key Indicator Search
 	append("Search Name", document.getElementsByName("search-name")[0].value); // Search Name*
@@ -115,15 +114,13 @@ function acquireKeyIndicatorSearch(){
 	append("Invert", document.getElementsByName("invert")[0].checked); // Invert
 }
 
-function acquireSavedSearches(){
-	
+function acquireSavedSearche(){
+
 }
 
-function acquireSwimlaneSearches(){
-	filename = document.getElementsByName("search-name")[0].value + ".tsv"
-	
-	// URL
-	append("URL", window.location.href);
+function acquireSwimlaneSearche(){
+	filename = document.getElementsByName("search-name")[0].value + TSV_EXT
+	append("URL", URL);
 	
 	// Entity Investigator Search
 	append("Search Name", document.getElementsByName("search-name")[0].value); // Search Name*
@@ -144,8 +141,12 @@ function acquireSwimlaneSearches(){
 	endKey();
 }
 
-function acquireViews(){
-	
+function acquireView(){
+	var extension = ".xml"
+	var viewType = document.getElementById("eai:type_id").value; // View type:
+	if(viewType != "XML"){extension = viewType}
+	filename = document.getElementsByClassName("ManagerPageTitle")[0].innerHTML + extension
+	startKey(document.getElementById("eai:data_id").value); // View*
 }
 
 // Corr // https://prd-p-4d4hjs7rl2kz.cloud.splunk.com/en-US/app/SplunkEnterpriseSecuritySuite/correlation_search_edit
@@ -155,20 +156,19 @@ function acquireViews(){
 // View // https://prd-p-4d4hjs7rl2kz.cloud.splunk.com/en-US/manager/SplunkEnterpriseSecuritySuite/data/ui/views/access_anomalies
 
 function acquire(){
-	tsv = "";
-	var URL = String(window.location.href);
+	data = "";
 	if(URL.includes("SplunkEnterpriseSecuritySuite/correlation_search_edit")){acquireCorrelationSearch();};
 	if(URL.includes("SplunkEnterpriseSecuritySuite/ess_key_indicator_edit")){acquireKeyIndicatorSearch();};
-	if(URL.includes("SplunkEnterpriseSecuritySuite/saved/searches")){acquireSavedSearches();};
-	if(URL.includes("SplunkEnterpriseSecuritySuite/ess_swimlane_edit")){acquireSwimlaneSearches();};
-	if(URL.includes("SplunkEnterpriseSecuritySuite/data/ui/views/access_anomalies")){acquireViews();};
+	if(URL.includes("SplunkEnterpriseSecuritySuite/saved/searches")){acquireSavedSearche();};
+	if(URL.includes("SplunkEnterpriseSecuritySuite/ess_swimlane_edit")){acquireSwimlaneSearche();};
+	if(URL.includes("SplunkEnterpriseSecuritySuite/data/ui/views")){acquireView();};
 }
 
-// Save tsv as file
+// Save data as file
 function destroyClickedElement(event){document.body.removeChild(event.target);}
 function saveTextAsFile(){
     //inputTextToSave--> the text area from which the text to save is taken from
-    var textToSave = tsv
+    var textToSave = data
     var textToSaveAsBlob = new Blob([textToSave], {type:"text/plain"});
     var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
     //inputFileNameToSaveAs-->The text field in which the user input for the desired file name is input into.
@@ -185,7 +185,6 @@ function saveTextAsFile(){
     downloadLink.click();
 }
 
-// Export Button onClick()
 function doTheThing(){
 	acquire();
 	saveTextAsFile();
