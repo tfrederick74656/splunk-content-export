@@ -1,8 +1,8 @@
 {
   "name": "Splunk Rule Exporter",
-  "version": "1.7.0",
+  "version": "2.0.0",
   "manifest_version": 2,
-  "description": "Export rules from Splunk Enterprise Security to TSV",
+  "description": "Export individual rules from Splunk Enterprise Security",
   "homepage_url": "http://tfrederick74656.com",
   "background": {
     "scripts": [
