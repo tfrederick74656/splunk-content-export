@@ -1,9 +1,10 @@
 /*************************
 Splunk Rule Downloader
 Written by Tyler Frederick (tyler.frederick@securityriskadvisors.com)
-Version 1.6, 05/31/2017
+Version 1.7, 05/31/2017
 
 Changelog:
+1.7 - Add support for Saved Searches
 1.6 - Add support for Views and XML file export
 1.5 - Add support for Entity Investigator Search (Swimlane Searches)
 1.4 - Add support for Key Indicators
@@ -114,11 +115,76 @@ function acquireKeyIndicatorSearch(){
 	append("Invert", document.getElementsByName("invert")[0].checked); // Invert
 }
 
-function acquireSavedSearche(){
-
+function acquireSavedSearch(){
+	filename = document.getElementsByClassName("ManagerPageTitle")[0].innerHTML + TSV_EXT
+	append("URL", URL);
+	
+	// Search
+	append("Search", document.getElementById("search_id").value);
+	append("Description", document.getElementById("description_id").value);
+	var arr = document.getElementsByName("dispatchAs");
+	for (var i = 0, len = arr.length; i < len; i++) {
+	  if(arr[i].checked){append("Run as", arr[i].value);};
+	};
+	
+	// Time Range
+	append("Earliest", document.getElementById("dispatch.earliest_time_id").value);
+	append("Latest", document.getElementById("dispatch.earliest_time_id").value);
+	
+	// Acceleration
+	append("Accelerate this search", document.getElementById("auto_summarize_id").checked);
+	var e = document.getElementById("auto_summarize.dispatch.earliest_time_id");
+	append("Summary range", e.options[e.selectedIndex].innerHTML);
+	
+	// Schedule and Alert
+	append("Schedule this alert", document.getElementById("is_scheduled_id").checked);
+	var e = document.getElementById("spl-ctrl_schedType_id");
+	append("Search", document.getElementById("cron_schedule_id").value);
+	append("Search", document.getElementById("schedule_window_id").value);
+	append("Schedule window", e.options[e.selectedIndex].innerHTML);
+	var e = document.getElementById("schedule_priority_id");
+	append("Schedule priority", e.options[e.selectedIndex].innerHTML);
+	
+	// Alert
+	var e = document.getElementById("alert_type_id");
+	append("Condition", e.options[e.selectedIndex].innerHTML);
+	var e = document.getElementById("alert.digest_mode_id");
+	append("Alert mode", e.options[e.selectedIndex].innerHTML);
+	append("Throttling", document.getElementById("alert.suppress_id").checked);
+	append("(Throttling time value)", document.getElementById("alert_suppress_period_value_id").value);
+	var e = document.getElementById("alert_suppress_period_unit_id");
+	append("(Throttling time scale)", e.options[e.selectedIndex].innerHTML);
+	var e = document.getElementById("alertexpiration_id");
+	append("Expiration", e.options[e.selectedIndex].innerHTML);
+	var e = document.getElementById("alert.severity_id");
+	append("Severity", e.options[e.selectedIndex].innerHTML);
+	
+	// Alert Actions
+	append("Send email", document.getElementById("spl-ctrl_email_enable_id").checked);
+	append("To", document.getElementById("action.email.to_id").value);
+	append("CC", document.getElementById("action.email.cc_id").value);
+	append("BCC", document.getElementById("action.email.bcc_id").value);
+	append("Add to RSS", document.getElementById("spl-ctrl_rss_enable_id").checked);
+	append("Run a script", document.getElementById("spl-ctrl_script_enable_id").checked);
+	append("File name of the shell script to run", document.getElementById("action.script.filename_id").value);
+	append("List in Triggered Alerts", document.getElementById("alert.track_id").checked);
+	
+	// Summary Indexing
+	append("Summary indexing", document.getElementById("spl-ctrl_summary_index_id").checked);
+	var e = document.getElementById("action.summary_index._name_id");
+	append("Select the summary index", e.options[e.selectedIndex].innerHTML);
+	var arr = document.getElementsByClassName("widget fieldmapping");
+	for (var i = 0, len = arr.length; i < len; i++) {
+		if(i != 1){ // Element 1 is empty
+			startKey("(Index field " + String(i) + ")");
+			valueOnly(arr[i].getElementsByClassName("fieldmapping left")[0].value);
+			valueOnly(arr[i].getElementsByClassName("fieldmapping right")[0].value);
+			endKey();
+		}
+	};
 }
 
-function acquireSwimlaneSearche(){
+function acquireSwimlaneSearch(){
 	filename = document.getElementsByName("search-name")[0].value + TSV_EXT
 	append("URL", URL);
 	
@@ -159,8 +225,8 @@ function acquire(){
 	data = "";
 	if(URL.includes("SplunkEnterpriseSecuritySuite/correlation_search_edit")){acquireCorrelationSearch();};
 	if(URL.includes("SplunkEnterpriseSecuritySuite/ess_key_indicator_edit")){acquireKeyIndicatorSearch();};
-	if(URL.includes("SplunkEnterpriseSecuritySuite/saved/searches")){acquireSavedSearche();};
-	if(URL.includes("SplunkEnterpriseSecuritySuite/ess_swimlane_edit")){acquireSwimlaneSearche();};
+	if(URL.includes("SplunkEnterpriseSecuritySuite/saved/searches")){acquireSavedSearch();};
+	if(URL.includes("SplunkEnterpriseSecuritySuite/ess_swimlane_edit")){acquireSwimlaneSearch();};
 	if(URL.includes("SplunkEnterpriseSecuritySuite/data/ui/views")){acquireView();};
 }
 
