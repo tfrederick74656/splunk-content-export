@@ -1,9 +1,12 @@
 // Splunk Rule Downloader
 // Written by Tyler Frederick (tyler.frederick@securityriskadvisors.com)
-// Version 1.3, 05/30/2017
+// Version 1.4, 05/30/2017
+// 1.3 - Initial Release
+// 1.4 - Add support for Key Indicators
 
 // TSV Data
 var tsv;
+var filename;
 
 // TSV Creator
 function append(key, value){tsv = tsv + key + "\t" + String(value) + "\r\n";}
@@ -13,10 +16,8 @@ function startKey(key){tsv = tsv + key;}
 function valueOnly(value){tsv = tsv + "\t" + String(value)}
 function endKey(){tsv = tsv + "\r\n"}
 
-function acquire()
-{
-	// Clear TSV variable
-	tsv = "";
+function acquireCorrelationSearch(){
+	filename = document.getElementsByName("name")[0].value + ".tsv"
 
 	// URL
 	append("URL", window.location.href);
@@ -80,16 +81,58 @@ function acquire()
 	append("Start Stream capture", document.getElementsByName("makestreams_isenabled")[0].checked); // Start Stream capture
 }
 
+function acquireKeyIndicatorSearch(){
+	filename = document.getElementsByName("search-name")[0].value + ".tsv"
+	
+	// URL
+	append("URL", window.location.href);
+	
+	// Key Indicator Search
+	append("Search Name", document.getElementsByName("search-name")[0].value); // Search Name*
+	var e = document.getElementsByName("app")[0]; // Destination App
+	append("Destination App", e.options[e.selectedIndex].innerHTML);
+	append("Title", document.getElementsByName("title")[0].value); // Title*
+	append("Sub-title", document.getElementsByName("sub-title")[0].value); // Sub-title
+	append("Search", document.getElementsByName("search")[0].value); // Search*
+	append("Drilldown URL", document.getElementsByName("drilldown-uri")[0].value); // Drilldown URL
+	
+	// Acceleration
+	append("Schedule", document.getElementsByName("schedule")[0].checked); // Schedule
+	append("Cron Schedule", document.getElementsByName("cron-schedule")[0].value); // Cron Schedule*
+	
+	// Fields
+	append("Value", document.getElementsByName("value-field")[0].value); // Value*
+	append("Delta", document.getElementsByName("delta-field")[0].value); // Delta
+	
+	// Rendering Options
+	append("Threshold", document.getElementsByName("threshold")[0].value); // Threshold
+	append("Value suffix", document.getElementsByName("value-suffix")[0].value); // Value suffix
+	append("Invert", document.getElementsByName("invert")[0].checked); // Invert
+}
+
+function acquire(){
+	tsv = "";
+	switch(document.getElementsByTagName("h1")[0].innerHTML) {
+    case "Correlation Search":
+        acquireCorrelationSearch()
+        break;
+    case "Key Indicator Search":
+        acquireKeyIndicatorSearch()
+        break;
+    default:
+        break;
+	}
+}
+
 // Save tsv as file
 function destroyClickedElement(event){document.body.removeChild(event.target);}
-function saveTextAsFile()
-{
+function saveTextAsFile(){
     //inputTextToSave--> the text area from which the text to save is taken from
     var textToSave = tsv
     var textToSaveAsBlob = new Blob([textToSave], {type:"text/plain"});
     var textToSaveAsURL = window.URL.createObjectURL(textToSaveAsBlob);
     //inputFileNameToSaveAs-->The text field in which the user input for the desired file name is input into.
-    var fileNameToSaveAs = document.getElementsByName("name")[0].value + ".tsv"
+    var fileNameToSaveAs = filename
 
     var downloadLink = document.createElement("a");
     downloadLink.download = fileNameToSaveAs;
@@ -103,20 +146,9 @@ function saveTextAsFile()
 }
 
 // Export Button onClick()
-function doTheThing()
-{
+function doTheThing(){
 	acquire();
 	saveTextAsFile();
 }
 
-// Insert Export button into page
-function shim()
-{
-	var exportButton = 	"<a href=\"javascript:doTheThing()\" id=\"export\" class=\"btn pull-left\" style=\"display: inline;\">Export to TSV</a>";
-	var actionsDiv = document.getElementsByClassName("actions")[0]
-	//var actionsDiv = document.getElementById("view_10250");
-	actionsDiv.innerHTML = exportButton + " " + actionsDiv.innerHTML;
-}
-
-shim()
 doTheThing()
