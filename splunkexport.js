@@ -1,8 +1,13 @@
-// Splunk Rule Downloader
-// Written by Tyler Frederick (tyler.frederick@securityriskadvisors.com)
-// Version 1.4, 05/30/2017
-// 1.3 - Initial Release
-// 1.4 - Add support for Key Indicators
+/*************************
+Splunk Rule Downloader
+Written by Tyler Frederick (tyler.frederick@securityriskadvisors.com)
+Version 1.5, 05/31/2017
+
+Changelog:
+1.5 - Add support for Swimlane Searches (Entity Investigator Search)
+1.4 - Add support for Key Indicators
+1.3 - Initial Release w/ Support for Correlation Searches
+*************************/
 
 // TSV Data
 var tsv;
@@ -37,8 +42,8 @@ function acquireCorrelationSearch(){
 
 	// Throttling
 	append("Window Duration", document.getElementsByName("duration")[0].value); // Window Duration
-	var arr = document.getElementsByClassName("tm-tag"); // Fields to group by
-	startKey("Fields to group by");
+	startKey("Fields to group by"); // Fields to group by
+	var arr = document.getElementsByClassName("tm-tag");
 	for (var i = 0, len = arr.length; i < len; i++) {
 	  valueOnly(arr[i].childNodes[0].innerHTML);
 	};
@@ -110,18 +115,53 @@ function acquireKeyIndicatorSearch(){
 	append("Invert", document.getElementsByName("invert")[0].checked); // Invert
 }
 
+function acquireSavedSearches(){
+	
+}
+
+function acquireSwimlaneSearches(){
+	filename = document.getElementsByName("search-name")[0].value + ".tsv"
+	
+	// URL
+	append("URL", window.location.href);
+	
+	// Entity Investigator Search
+	append("Search Name", document.getElementsByName("search-name")[0].value); // Search Name*
+	var e = document.getElementsByName("app")[0]; // Destination App*
+	append("Destination App", e.options[e.selectedIndex].innerHTML);
+	append("Title", document.getElementsByName("title")[0].value); // Title*
+	append("Search", document.getElementsByName("search")[0].value); // Search*
+	append("Drilldown Search", document.getElementsByName("drilldown-search")[0].value); // Drilldown Search*
+	var e = document.getElementsByName("color")[0]; // Color*
+	append("Color", e.options[e.selectedIndex].innerHTML);
+	var e = document.getElementsByName("entity_type")[0]; // Entity type*
+	append("Entity type", e.options[e.selectedIndex].innerHTML);
+	startKey("Constraint Fields"); // Constraint Fields*
+	var arr = document.getElementsByClassName("tm-tag");
+	for (var i = 0, len = arr.length; i < len; i++) {
+	  valueOnly(arr[i].childNodes[0].innerHTML);
+	};
+	endKey();
+}
+
+function acquireViews(){
+	
+}
+
+// Corr // https://prd-p-4d4hjs7rl2kz.cloud.splunk.com/en-US/app/SplunkEnterpriseSecuritySuite/correlation_search_edit
+// Save // https://prd-p-4d4hjs7rl2kz.cloud.splunk.com/en-US/manager/SplunkEnterpriseSecuritySuite/saved/searches
+// KeyI // https://prd-p-4d4hjs7rl2kz.cloud.splunk.com/en-US/app/SplunkEnterpriseSecuritySuite/ess_key_indicator_edit
+// EntI // https://prd-p-4d4hjs7rl2kz.cloud.splunk.com/en-US/app/SplunkEnterpriseSecuritySuite/ess_swimlane_edit
+// View // https://prd-p-4d4hjs7rl2kz.cloud.splunk.com/en-US/manager/SplunkEnterpriseSecuritySuite/data/ui/views/access_anomalies
+
 function acquire(){
 	tsv = "";
-	switch(document.getElementsByTagName("h1")[0].innerHTML) {
-    case "Correlation Search":
-        acquireCorrelationSearch()
-        break;
-    case "Key Indicator Search":
-        acquireKeyIndicatorSearch()
-        break;
-    default:
-        break;
-	}
+	var URL = String(window.location.href);
+	if(URL.includes("SplunkEnterpriseSecuritySuite/correlation_search_edit")){acquireCorrelationSearch();};
+	if(URL.includes("SplunkEnterpriseSecuritySuite/ess_key_indicator_edit")){acquireKeyIndicatorSearch();};
+	if(URL.includes("SplunkEnterpriseSecuritySuite/saved/searches")){acquireSavedSearches();};
+	if(URL.includes("SplunkEnterpriseSecuritySuite/ess_swimlane_edit")){acquireSwimlaneSearches();};
+	if(URL.includes("SplunkEnterpriseSecuritySuite/data/ui/views/access_anomalies")){acquireViews();};
 }
 
 // Save tsv as file
